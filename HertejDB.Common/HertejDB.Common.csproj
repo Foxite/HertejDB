@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
 
         <Authors>Foxite</Authors>
-        <PackageLicenseExpression>AGPL-3.0</PackageLicenseExpression>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/Foxite/HertejDB</PackageProjectUrl>
         <RepositoryUrl>https://github.com/Foxite/HertejDB</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
