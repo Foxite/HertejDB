@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using HertejDB.Common;
 
 namespace HertejDB.Server.Data;
 
@@ -14,14 +14,4 @@ public class Image {
 	public ImageSourceAttribution? SourceAttribution { get; set; }
 	
 	public ICollection<ImageRating> Ratings { get; set; }
-}
-
-[Owned]
-public class ImageSourceAttribution {
-	public string SourceName { get; set; }
-	public string RemoteId { get; set; }
-	public string RemoteUrl { get; set; }
-	public string Author { get; set; }
-	public string License { get; set; }
-	public DateTimeOffset Creation { get; set; }
 }

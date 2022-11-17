@@ -1,5 +1,5 @@
+using HertejDB.Common;
 using HertejDB.Server.Data;
-using HertejDB.Server.Dtos;
 using HertejDB.Server.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,7 +38,13 @@ public class ImageController : ControllerBase {
 
 	[HttpGet("{id:long}")]
 	public Task<IActionResult> GetImage([FromRoute] long id) {
-		return LambdaOrNotFound(m_DbContext.Images.FindAsync(id), image => Ok(new GetImageDto(image)));
+		return LambdaOrNotFound(m_DbContext.Images.FindAsync(id), image => Ok(new GetImageDto() {
+			Id = image.Id,
+			Category = image.Category,
+			MimeType = image.MimeType,
+			Added = image.Added,
+			Attribution = image.SourceAttribution,
+		}));
 	}
 
 	[HttpGet("{id:long}/download")]

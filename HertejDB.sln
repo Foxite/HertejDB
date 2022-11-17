@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{93669A
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HertejDB.Common", "HertejDB.Common\HertejDB.Common.csproj", "{B936FCBC-56C4-44E0-AE06-FBCD451C6E7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,5 +19,9 @@ Global
 		{37A22B66-C90D-49E7-B770-8FBACA5519FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37A22B66-C90D-49E7-B770-8FBACA5519FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37A22B66-C90D-49E7-B770-8FBACA5519FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B936FCBC-56C4-44E0-AE06-FBCD451C6E7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B936FCBC-56C4-44E0-AE06-FBCD451C6E7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B936FCBC-56C4-44E0-AE06-FBCD451C6E7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B936FCBC-56C4-44E0-AE06-FBCD451C6E7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,6 @@
 using System.Net;
+using HertejDB.Common;
 using HertejDB.Server.Data;
-using HertejDB.Server.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +43,13 @@ public class ImageRatingController : ControllerBase {
 		Image? image = await query.FirstOrDefaultAsync();
 		
 		if (image != null) {
-			return Ok(new GetImageDto(image));
+			return Ok(new GetImageDto() {
+				Id = image.Id,
+				Category = image.Category,
+				MimeType = image.MimeType,
+				Added = image.Added,
+				Attribution = image.SourceAttribution,
+			});
 		} else {
 			return NoContent();
 		}
