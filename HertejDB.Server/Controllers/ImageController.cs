@@ -31,6 +31,11 @@ public class ImageController : ControllerBase {
 		}
 	}
 
+	[HttpGet("categories")]
+	public Task<string[]> GetCategories() {
+		return m_DbContext.Images.Select(image => image.Category).Distinct().ToArrayAsync();
+	}
+
 	[HttpGet("random")]
 	public Task<IActionResult> GetRandomImage([FromQuery] string category) {
 		return LambdaOrNotFound(GetRandomImageAsync(category), Ok);
