@@ -1,0 +1,32 @@
+version: "3.3"
+
+services:
+  database:
+    image: "postgres:13.3"
+    environment:
+      POSTGRES_USER: hertej
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: hertej-data
+    ports:
+      - "5432:5432"
+    networks:
+      - hertej-network
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+  
+  server:
+    build:
+      dockerfile: HertejDB.Server/Dockerfile
+      context: .
+    depends_on:
+      - database
+    ports:
+      - "5000:5000"
+    networks:
+      - hertej-network
+
+networks:
+  hertej-network:
+
+volumes:
+  database-data:
