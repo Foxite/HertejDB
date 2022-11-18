@@ -1,0 +1,23 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Publish Docker
+      uses: elgohr/Publish-Docker-Github-Action@3.04
+      with:
+        name: hertejdb-server
+        context: .
+        dockerfile: HertejDB.Server/Dockerfile
+        registry: ${{ secrets.DOCKER_PUSH_REPO }}
+        username: ${{ secrets.DOCKER_PUSH_USER }}
+        password: ${{ secrets.DOCKER_PUSH_PASSWD }}
+        default_branch: master
+        no_push: ${{ github.event_name == 'pull_request' }}
