@@ -33,7 +33,7 @@ public class ImageController : ControllerBase {
 
 	[HttpGet("categories")]
 	public Task<string[]> GetCategories() {
-		return m_DbContext.Images.Select(image => image.Category).Distinct().ToArrayAsync();
+		return m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.Passed).Select(image => image.Category).Distinct().ToArrayAsync();
 	}
 
 	[HttpGet("random")]
