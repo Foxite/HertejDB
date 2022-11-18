@@ -11,7 +11,6 @@ RUN dotnet publish "HertejDB.Server.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS final
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
 
 COPY --from=build /app/publish .
 CMD ["dotnet", "HertejDB.Server.dll"]
