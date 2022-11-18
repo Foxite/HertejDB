@@ -1,7 +1,8 @@
 **/bin
 **/obj
-.idea
 */appsettings.Development.json
 
+.idea
 data
+*.env
 

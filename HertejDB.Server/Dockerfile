@@ -1,20 +1,17 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+﻿FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
 WORKDIR /src
+COPY ["HertejDB.Common/HertejDB.Common.csproj", "HertejDB.Common/"]
 COPY ["HertejDB.Server/HertejDB.Server.csproj", "HertejDB.Server/"]
 RUN dotnet restore "HertejDB.Server/HertejDB.Server.csproj"
 COPY . .
 WORKDIR "/src/HertejDB.Server"
 RUN dotnet build "HertejDB.Server.csproj" -c Release -o /app/build
-
-FROM build AS publish
 RUN dotnet publish "HertejDB.Server.csproj" -c Release -o /app/publish
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-alpine AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "HertejDB.Server.dll"]
+EXPOSE 80
+EXPOSE 443
+
+COPY --from=build /app/publish .
+CMD ["dotnet", "HertejDB.Server.dll"]

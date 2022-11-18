@@ -13,17 +13,21 @@ services:
       - hertej-network
     volumes:
       - database-data:/var/lib/postgresql/data/
-  
+
   server:
     build:
       dockerfile: HertejDB.Server/Dockerfile
       context: .
     depends_on:
       - database
+    env_file:
+      - server.env
     ports:
-      - "5000:5000"
+      - "5042:5042"
     networks:
       - hertej-network
+    volumes:
+      - ./data:/data:rw
 
 networks:
   hertej-network:
