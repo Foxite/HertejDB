@@ -1,28 +1,24 @@
 using HertejDB.Common;
 using HertejDB.Server.Data;
+using HertejDB.Server.Services;
 using HertejDB.Server.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace HertejDB.Server.Controllers;
 
 [ApiController]
 [Route("[controller]")]
 public class ImageController : ControllerBase {
-	private readonly HertejDbContext m_DbContext;
 	private readonly FileStorage m_FileStorage;
+	private readonly ImageService m_Service;
 
-	public ImageController(HertejDbContext dbContext, FileStorage fileStorage) {
-		m_DbContext = dbContext;
+	public ImageController(FileStorage fileStorage, ImageService service) {
 		m_FileStorage = fileStorage;
+		m_Service = service;
 	}
 
-	private async ValueTask<Image?> GetRandomImageAsync(string category) {
-		return await m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.Passed && image.Category == category).OrderBy(image => EF.Functions.Random()).FirstOrDefaultAsync();
-	}
-
-	private async Task<IActionResult> LambdaOrNotFound(ValueTask<Image?> imageTask, Func<Image, IActionResult> selector) {
+	private async Task<IActionResult> LambdaOrNotFound(Task<Image?> imageTask, Func<Image, IActionResult> selector) {
 		Image? image = await imageTask;
 		if (image != null) {
 			return selector(image);
@@ -33,47 +29,53 @@ public class ImageController : ControllerBase {
 
 	[HttpGet("categories")]
 	public Task<string[]> GetCategories() {
-		return m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.Passed).Select(image => image.Category).Distinct().ToArrayAsync();
+		return m_Service.GetCategories();
 	}
 
 	[HttpGet("random")]
 	public Task<IActionResult> GetRandomImage([FromQuery] string category) {
-		return LambdaOrNotFound(GetRandomImageAsync(category), Ok);
+		return LambdaOrNotFound(m_Service.GetRandomImageAsync(category), Ok);
+	}
+
+	[HttpGet]
+	public async Task<IActionResult> GetImages([FromQuery] string category) {
+		return Ok((await m_Service.GetImages(category)).Select(GetGetImageDto));
 	}
 
 	[HttpGet("{id:long}")]
 	public Task<IActionResult> GetImage([FromRoute] long id) {
-		return LambdaOrNotFound(m_DbContext.Images.FindAsync(id), image => Ok(new GetImageDto() {
-			Id = image.Id,
-			Category = image.Category,
-			MimeType = image.MimeType,
-			Added = image.Added,
-			Attribution = image.SourceAttribution,
-		}));
+		return LambdaOrNotFound(m_Service.GetImageById(id), image => Ok(GetGetImageDto(image)));
 	}
 
 	[HttpGet("{id:long}/download")]
 	public Task<IActionResult> DownloadImage([FromRoute] long id) {
-		return LambdaOrNotFound(m_DbContext.Images.FindAsync(id), image => m_FileStorage.Get(image));
+		return LambdaOrNotFound(m_Service.GetImageById(id), image => m_FileStorage.Get(image));
+	}
+
+	[HttpDelete("{id:long}")]
+	public async Task<IActionResult> DeleteImage([FromRoute] long id) {
+		if (await m_Service.DeleteImage(id)) {
+			return Ok();
+		} else {
+			return NotFound();
+		}
 	}
 
 	[HttpPost]
 	[Authorize("Upload")]
 	public async Task<IActionResult> UploadImage([FromForm] string category, IFormFile file) {
-		// TODO authorize
-		var image = new Image() {
-			Category = category,
-			MimeType = file.ContentType,
-			Added = DateTime.UtcNow,
-			RatingStatus = RatingStatus.NotRated
-		};
-
-		string storageId = await m_FileStorage.StoreAsync(image, file.OpenReadStream());
-		image.StorageId = storageId;
-		m_DbContext.Images.Add(image);
-
-		await m_DbContext.SaveChangesAsync();
+		Image image = await m_Service.StoreNewImage(category, file.OpenReadStream(), file.ContentType, null);
 
 		return CreatedAtAction(nameof(GetImage), new { id = image.Id }, null);
+	}
+
+	private GetImageDto GetGetImageDto(Image image) {
+		return new GetImageDto() {
+			Id = image.Id,
+			Category = image.Category,
+			MimeType = image.MimeType,
+			Added = image.Added,
+			Attribution = image.SourceAttribution,
+		};
 	}
 }

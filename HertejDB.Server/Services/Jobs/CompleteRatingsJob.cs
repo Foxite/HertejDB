@@ -1,7 +1,6 @@
 using CronScheduler.Extensions.Scheduler;
 using HertejDB.Server.Data;
 using HertejDB.Server.Options;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace HertejDB.Server.Jobs;

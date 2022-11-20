@@ -3,6 +3,7 @@ using System;
 using HertejDB.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HertejDB.Server.Migrations
 {
     [DbContext(typeof(HertejDbContext))]
-    partial class HertejDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221120191710_PendingCrawl")]
+    partial class PendingCrawl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,9 +93,6 @@ namespace HertejDB.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("DesiredCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MaxAtOnce")
                         .HasColumnType("integer");
 
                     b.Property<string>("SearchParameter")

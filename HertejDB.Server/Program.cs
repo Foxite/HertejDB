@@ -1,9 +1,14 @@
+using FlickrNet;
 using HertejDB.Server;
+using HertejDB.Server.Crawling;
 using HertejDB.Server.Data;
 using HertejDB.Server.Jobs;
 using HertejDB.Server.Options;
+using HertejDB.Server.Services;
 using HertejDB.Server.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -55,13 +60,24 @@ builder.Services.AddDbContext<HertejDbContext>(dbcob => dbcob.UseNpgsql(dbConnSt
 
 builder.Services.Configure<RatingOptions>(builder.Configuration.GetRequiredSection("Rating"));
 builder.Services.Configure<LocalFileStorage.Options>(builder.Configuration.GetRequiredSection("Storage"));
+builder.Services.Configure<FlickrOptions>(builder.Configuration.GetRequiredSection("Flickr"));
 
 builder.Services.AddSingleton<FileStorage, LocalFileStorage>();
 builder.Services.AddSingleton<CompleteRatingsJob>();
+builder.Services.AddSingleton<HttpClient>();
+
+builder.Services.AddSingleton(isp => {
+	FlickrOptions options = isp.GetRequiredService<IOptions<FlickrOptions>>().Value;
+	return new Flickr(options.ApiKey, options.ApiSecret);
+});
+builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ImageAcquirer, FlickrImageAcquirer>());
+
+builder.Services.AddScoped<CrawlService>();
+builder.Services.AddScoped<ImageService>();
 
 builder.Services.AddScheduler(ctx => {
 	ctx.AddJob<CompleteRatingsJob>(configure: so => so.CronSchedule = "0 * * * *");
-	//ctx.AddJob<CrawlImagesJob>(configure: so => so.CronSchedule = "0 * * * *");
+	ctx.AddJob<CrawlImagesJob>(configure: so => so.CronSchedule = "0 * * * *");
 });
 
 builder.Services
