@@ -54,6 +54,12 @@ public class ImageRatingController : ControllerBase {
 			return NoContent();
 		}
 	}
+
+	[HttpGet("categories")]
+	public async Task<IActionResult> GetUnratedCategories() {
+		string[] categories = await m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.InProgress || image.RatingStatus == RatingStatus.NotRated).Select(image => image.Category).Distinct().ToArrayAsync();
+		return Ok(categories);
+	}
 	
 	[HttpPut("{imageId:long}")]
 	public async Task<IActionResult> SubmitRating([FromRoute] long imageId, [FromBody] SubmitRatingDto dto) {
