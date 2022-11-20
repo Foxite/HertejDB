@@ -53,6 +53,7 @@ public class ImageController : ControllerBase {
 	}
 
 	[HttpDelete("{id:long}")]
+	[Authorize("Admin")]
 	public async Task<IActionResult> DeleteImage([FromRoute] long id) {
 		if (await m_Service.DeleteImage(id)) {
 			return Ok();
