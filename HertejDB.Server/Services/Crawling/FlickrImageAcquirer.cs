@@ -47,7 +47,13 @@ public class FlickrImageAcquirer : ImageAcquirer {
 				if (await imageExists(photo.PhotoId)) {
 					continue;
 				}
-				
+
+				if (photo.Farm == "0") {
+					// Not sure why, but sometimes Flickr gives a photo with urls for farm 0, which doesn't exist.
+					// You can usually get the image from another farm but I'm not gonna bother fixing the url
+					continue;
+				}
+
 				yield return new RemoteImage(
 					new ImageSourceAttribution() {
 						Author = photo.OwnerName,
