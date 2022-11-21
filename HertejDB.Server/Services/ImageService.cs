@@ -15,11 +15,23 @@ public class ImageService {
 	}
 	
 	public async Task<Image?> GetRandomImageAsync(string category) {
-		return await m_DbContext.Images.Include(image => image.SourceAttribution).Where(image => image.RatingStatus == RatingStatus.Passed && image.Category == category).OrderBy(image => EF.Functions.Random()).FirstOrDefaultAsync();
+		return await m_DbContext.Images
+			.Include(image => image.SourceAttribution)
+			.Where(image => image.RatingStatus == RatingStatus.Passed && image.Category == category)
+			.OrderBy(image => EF.Functions.Random())
+			.FirstOrDefaultAsync();
 	}
 
-	public Task<string[]> GetCategories() {
-		return m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.Passed).Select(image => image.Category).Distinct().ToArrayAsync();
+	public async Task<IDictionary<string, int>> GetCategoriesWithPassedCount() {
+		return (await m_DbContext.Images
+			.Where(image => image.RatingStatus == RatingStatus.Passed)
+			.GroupBy(image => image.Category)
+			.Select(group => new { Category = group.Key, Count = group.Count() })
+			.ToArrayAsync())
+			.ToDictionary(
+				row => row.Category,
+				row => row.Count
+			);
 	}
 
 	public Task<Image?> GetImageById(long id) {

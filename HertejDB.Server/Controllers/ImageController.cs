@@ -28,8 +28,8 @@ public class ImageController : ControllerBase {
 	}
 
 	[HttpGet("categories")]
-	public Task<string[]> GetCategories() {
-		return m_Service.GetCategories();
+	public Task<IDictionary<string, int>> GetCategories() {
+		return m_Service.GetCategoriesWithPassedCount();
 	}
 
 	[HttpGet("random")]

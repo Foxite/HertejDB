@@ -57,8 +57,17 @@ public class ImageRatingController : ControllerBase {
 
 	[HttpGet("categories")]
 	public async Task<IActionResult> GetUnratedCategories() {
-		string[] categories = await m_DbContext.Images.Where(image => image.RatingStatus == RatingStatus.InProgress || image.RatingStatus == RatingStatus.NotRated).Select(image => image.Category).Distinct().ToArrayAsync();
-		return Ok(categories);
+		IDictionary<string, int> result = (await m_DbContext.Images
+			.Where(image => image.RatingStatus == RatingStatus.NotRated || image.RatingStatus == RatingStatus.InProgress)
+			.GroupBy(image => image.Category)
+			.Select(group => new { Category = group.Key, Count = group.Count() })
+			.ToArrayAsync())
+			.ToDictionary(
+				row => row.Category,
+				row => row.Count
+			);
+		
+		return Ok(result);
 	}
 	
 	[HttpPut("{imageId:long}")]
