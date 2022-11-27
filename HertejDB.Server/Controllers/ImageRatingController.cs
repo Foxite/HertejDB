@@ -19,28 +19,15 @@ public class ImageRatingController : ControllerBase {
 
 	[HttpGet("unrated")]
 	public async Task<IActionResult> GetUnratedImage([FromQuery] string userId, [FromQuery] string? category = null) {
-		IQueryable<Image> query = m_DbContext.Images
+		Image? image = await m_DbContext.Images
 			.Where(image =>
+				(category == null || image.Category == category) &&
 				(image.RatingStatus == RatingStatus.InProgress || image.RatingStatus == RatingStatus.NotRated) &&
 				!image.Ratings.Any(ir => ir.UserId == userId)
-			);
-
-		// Sorting order:
-		// - Images that match the category (if provided)
-		// - Images that have RatingStatus.InProgress
-		// - Oldest images
-		if (category != null) {
-			query = query
-				.OrderBy(image => image.Category == category)
-				.ThenBy (image => image.RatingStatus == RatingStatus.InProgress)
-				.ThenBy (image => image.Added);
-		} else {
-			query = query
-				.OrderBy(image => image.RatingStatus == RatingStatus.InProgress)
-				.ThenBy (image => image.Added);
-		}
-
-		Image? image = await query.FirstOrDefaultAsync();
+			)
+			.OrderBy(image => image.RatingStatus == RatingStatus.InProgress)
+			.ThenBy (image => image.Added)
+			.FirstOrDefaultAsync();
 		
 		if (image != null) {
 			return Ok(new GetImageDto() {
