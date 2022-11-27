@@ -17,10 +17,10 @@ public class CrawlService {
 		m_Http = http;
 	}
 
-	public IAsyncEnumerable<RemoteImage> GetImages(int maximum, string source, string parameter, CancellationToken cancellationToken) {
+	public IAsyncEnumerable<RemoteImage> GetImages(int maximum, string source, string parameter, string? lastPosition, CancellationToken cancellationToken) {
 		ImageAcquirer acquirer = m_Acquirers.First(acquirer => acquirer.Name == source);
 
-		return acquirer.AcquireImagesAsync(maximum, parameter, remoteId => CheckImageExists(source, remoteId), cancellationToken);
+		return acquirer.AcquireImagesAsync(maximum, parameter, remoteId => CheckImageExists(source, remoteId), lastPosition, cancellationToken);
 	}
 
 	private Task<bool> CheckImageExists(string source, string remoteId) {
@@ -37,10 +37,13 @@ public class CrawlService {
 				await ExecutePendingCrawl(neededImages, pendingCrawl, cancellationToken);
 			}
 		}
+
+		await m_DbContext.SaveChangesAsync(cancellationToken);
 	}
 
 	private async Task ExecutePendingCrawl(int neededImages, PendingCrawl pendingCrawl, CancellationToken cancellationToken) {
-		await foreach (RemoteImage remoteImage in GetImages(neededImages, pendingCrawl.Source, pendingCrawl.SearchParameter, cancellationToken)) {
+		await foreach (RemoteImage remoteImage in GetImages(neededImages, pendingCrawl.Source, pendingCrawl.SearchParameter, pendingCrawl.LastPosition, cancellationToken)) {
+			pendingCrawl.LastPosition = remoteImage.PositionData;
 			using HttpResponseMessage hrm = await remoteImage.DownloadAsync(m_Http);
 			hrm.EnsureSuccessStatusCode();
 			await m_ImageService.StoreNewImage(pendingCrawl.Category, await hrm.Content.ReadAsStreamAsync(cancellationToken), hrm.Content.Headers.ContentType!.MediaType!, remoteImage.SourceAttribution);

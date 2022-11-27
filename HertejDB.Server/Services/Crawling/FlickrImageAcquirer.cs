@@ -13,7 +13,7 @@ public class FlickrImageAcquirer : ImageAcquirer {
 		m_Flickr = flickr;
 	}
 
-	public async override IAsyncEnumerable<RemoteImage> AcquireImagesAsync(int maximum, string searchParameter, CheckImageExists imageExists, [EnumeratorCancellation] CancellationToken cancellationToken) {
+	public async override IAsyncEnumerable<RemoteImage> AcquireImagesAsync(int maximum, string searchParameter, CheckImageExists imageExists, string? lastPosition, [EnumeratorCancellation] CancellationToken cancellationToken) {
 		var options = new PhotoSearchOptions() {
 			Tags = searchParameter,
 			Licenses = {
@@ -36,14 +36,23 @@ public class FlickrImageAcquirer : ImageAcquirer {
 			PerPage = maximum
 		};
 
-		int page = 0;
+		int page;
+		if (lastPosition != null && int.TryParse(lastPosition, out int parsedPage)) {
+			page = parsedPage;
+		} else {
+			page = 0;
+		}
+
+		int startedAtPage = page;
 		int yielded = 0;
 
 		while (yielded < maximum) {
 			options.Page = page;
 			PhotoCollection photos = await m_Flickr.PhotosSearchAsync(options);
+			bool any = false;
 
 			foreach (Photo photo in photos) {
+				any = true;
 				if (await imageExists(photo.PhotoId)) {
 					continue;
 				}
@@ -76,7 +85,8 @@ public class FlickrImageAcquirer : ImageAcquirer {
 						RemoteUrl = photo.WebUrl,
 						SourceName = Name,
 					},
-					http => http.GetAsync(photo.LargeUrl ?? photo.MediumUrl ?? photo.SmallUrl, cancellationToken)
+					http => http.GetAsync(photo.LargeUrl ?? photo.MediumUrl ?? photo.SmallUrl, cancellationToken),
+					page.ToString()
 				);
 
 				yielded++;
@@ -86,7 +96,18 @@ public class FlickrImageAcquirer : ImageAcquirer {
 				}
 			}
 
-			page++;
+			if (any) {
+				// Next page
+				page++;
+			} else {
+				// Page empty. Restart from top
+				page = 0;
+			}
+			
+			if (page == startedAtPage) {
+				// We have enumerated all pages
+				yield break;
+			}
 		}
 	}
 }

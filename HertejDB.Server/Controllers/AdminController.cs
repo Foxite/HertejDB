@@ -32,9 +32,9 @@ public class AdminController : ControllerBase {
 	}
 
 	[HttpGet("TestCrawl")]
-	public async Task<IActionResult> TestAcquire([FromQuery] string source, [FromQuery] string parameter, [FromQuery] int maximum, CancellationToken cancellationToken) {
+	public async Task<IActionResult> TestAcquire([FromQuery] string source, [FromQuery] string parameter, [FromQuery] int maximum, [FromQuery] string? position, CancellationToken cancellationToken) {
 		var result = new List<ImageSourceAttribution>();
-		await foreach (RemoteImage remoteImage in m_CrawlService.GetImages(maximum, source, parameter, cancellationToken)) {
+		await foreach (RemoteImage remoteImage in m_CrawlService.GetImages(maximum, source, parameter, position, cancellationToken)) {
 			result.Add(remoteImage.SourceAttribution);
 		}
 

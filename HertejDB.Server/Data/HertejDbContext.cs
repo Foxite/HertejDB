@@ -28,4 +28,5 @@ public class PendingCrawl {
 	public string Category { get; set; }
 	public int DesiredCount { get; set; }
 	public int MaxAtOnce { get; set; }
+	public string LastPosition { get; set; }
 }
