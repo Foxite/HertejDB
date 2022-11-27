@@ -15,7 +15,7 @@ public class FlickrImageAcquirer : ImageAcquirer {
 
 	public async override IAsyncEnumerable<RemoteImage> AcquireImagesAsync(int maximum, string searchParameter, CheckImageExists imageExists, string? lastPosition, [EnumeratorCancellation] CancellationToken cancellationToken) {
 		var options = new PhotoSearchOptions() {
-			Tags = searchParameter,
+			Text = searchParameter,
 			Licenses = {
 				LicenseType.AttributionNoncommercialShareAlikeCC,
 				LicenseType.AttributionNoncommercialCC,
@@ -96,7 +96,7 @@ public class FlickrImageAcquirer : ImageAcquirer {
 				}
 			}
 
-			if (any) {
+			if (any || page == 0) {
 				// Next page
 				page++;
 			} else {
