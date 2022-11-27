@@ -32,7 +32,7 @@ public class CrawlService {
 		
 		// ToList to avoid concurrent operations
 		foreach (PendingCrawl pendingCrawl in await m_DbContext.PendingCrawls.ToListAsync(cancellationToken)) {
-			int neededImages = Math.Min(pendingCrawl.MaxAtOnce, pendingCrawl.DesiredCount - await m_DbContext.Images.CountAsync(image => image.Category == pendingCrawl.Category, cancellationToken: cancellationToken));
+			int neededImages = Math.Min(pendingCrawl.MaxAtOnce, pendingCrawl.DesiredCount - await m_DbContext.Images.CountAsync(image => image.Category == pendingCrawl.Category && image.RatingStatus != RatingStatus.Rejected, cancellationToken: cancellationToken));
 			if (neededImages > 0) {
 				await ExecutePendingCrawl(neededImages, pendingCrawl, cancellationToken);
 			}
