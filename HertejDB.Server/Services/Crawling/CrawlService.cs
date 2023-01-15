@@ -9,12 +9,14 @@ public class CrawlService {
 	private readonly HertejDbContext m_DbContext;
 	private readonly ImageService m_ImageService;
 	private readonly HttpClient m_Http;
+	private readonly ILogger<CrawlService> m_Logger;
 
-	public CrawlService(IEnumerable<ImageAcquirer> acquirers, HertejDbContext dbContext, ImageService imageService, HttpClient http) {
+	public CrawlService(IEnumerable<ImageAcquirer> acquirers, HertejDbContext dbContext, ImageService imageService, HttpClient http, ILogger<CrawlService> logger) {
 		m_Acquirers = acquirers;
 		m_DbContext = dbContext;
 		m_ImageService = imageService;
 		m_Http = http;
+		m_Logger = logger;
 	}
 
 	public IAsyncEnumerable<RemoteImage> GetImages(int maximum, string source, string parameter, string? lastPosition, CancellationToken cancellationToken) {
@@ -32,7 +34,9 @@ public class CrawlService {
 		
 		// ToList to avoid concurrent operations
 		foreach (PendingCrawl pendingCrawl in await m_DbContext.PendingCrawls.ToListAsync(cancellationToken)) {
-			int neededImages = Math.Min(pendingCrawl.MaxAtOnce, pendingCrawl.DesiredCount - await m_DbContext.Images.CountAsync(image => image.Category == pendingCrawl.Category && image.RatingStatus != RatingStatus.Rejected, cancellationToken: cancellationToken));
+			int usableImages = await m_DbContext.Images.CountAsync(image => image.Category == pendingCrawl.Category && image.RatingStatus != RatingStatus.Rejected, cancellationToken: cancellationToken);
+			int neededImages = Math.Min(pendingCrawl.MaxAtOnce, pendingCrawl.DesiredCount - usableImages);
+			m_Logger.LogDebug("{CrawlCategory}: {UsableImages} usable images; need {NeededImages} images", pendingCrawl.Category, usableImages, neededImages);
 			if (neededImages > 0) {
 				await ExecutePendingCrawl(neededImages, pendingCrawl, cancellationToken);
 			}
