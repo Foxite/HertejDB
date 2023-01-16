@@ -46,12 +46,16 @@ public class CrawlService {
 	}
 
 	private async Task ExecutePendingCrawl(int neededImages, PendingCrawl pendingCrawl, CancellationToken cancellationToken) {
+		m_Logger.LogDebug("Crawling {Count} images for {Category}", neededImages, pendingCrawl.Category);
+		int count = 0;
 		await foreach (RemoteImage remoteImage in GetImages(neededImages, pendingCrawl.Source, pendingCrawl.SearchParameter, pendingCrawl.LastPosition, cancellationToken)) {
+			count++;
 			pendingCrawl.LastPosition = remoteImage.PositionData;
 			using HttpResponseMessage hrm = await remoteImage.DownloadAsync(m_Http);
 			hrm.EnsureSuccessStatusCode();
 			await m_ImageService.StoreNewImage(pendingCrawl.Category, await hrm.Content.ReadAsStreamAsync(cancellationToken), hrm.Content.Headers.ContentType!.MediaType!, remoteImage.SourceAttribution);
 		}
+		m_Logger.LogDebug("Crawled {Count} images for {Category}", count, pendingCrawl.Category);
 	}
 
 	public async Task<ICollection<PendingCrawl>> GetPendingCrawls() {
