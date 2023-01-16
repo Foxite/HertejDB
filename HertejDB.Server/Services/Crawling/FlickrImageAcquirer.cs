@@ -6,11 +6,13 @@ namespace HertejDB.Server.Crawling;
 
 public class FlickrImageAcquirer : ImageAcquirer {
 	private readonly Flickr m_Flickr;
+	private readonly ILogger<FlickrImageAcquirer> m_Logger;
 
 	public override string Name => "Flickr";
 
-	public FlickrImageAcquirer(Flickr flickr) {
+	public FlickrImageAcquirer(Flickr flickr, ILogger<FlickrImageAcquirer> logger) {
 		m_Flickr = flickr;
+		m_Logger = logger;
 	}
 
 	public async override IAsyncEnumerable<RemoteImage> AcquireImagesAsync(int maximum, string searchParameter, CheckImageExists imageExists, string? lastPosition, [EnumeratorCancellation] CancellationToken cancellationToken) {
@@ -47,6 +49,7 @@ public class FlickrImageAcquirer : ImageAcquirer {
 		int yielded = 0;
 
 		while (yielded < maximum) {
+			m_Logger.LogDebug("Page {Page}", page);
 			options.Page = page;
 			PhotoCollection photos = await m_Flickr.PhotosSearchAsync(options);
 			bool any = false;
@@ -92,20 +95,24 @@ public class FlickrImageAcquirer : ImageAcquirer {
 				yielded++;
 
 				if (yielded > maximum) {
+					m_Logger.LogDebug("End: {Yielded} > maximum ({Maximum})", yielded, maximum);
 					yield break;
 				}
 			}
 
 			if (any || page == 0) {
 				// Next page
+				m_Logger.LogDebug("Next page");
 				page++;
 			} else {
 				// Page empty. Restart from top
+				m_Logger.LogDebug("Page empty (starting from top)");
 				page = 0;
 			}
 			
 			if (page == startedAtPage) {
 				// We have enumerated all pages
+				m_Logger.LogDebug("End: {Page} == {StartedAtPage}", page, startedAtPage);
 				yield break;
 			}
 		}
