@@ -13,4 +13,4 @@ WORKDIR /app
 EXPOSE 80
 
 COPY --from=build /app/publish .
-CMD ["HertejDB.Server"]
+CMD ["./HertejDB.Server"]
