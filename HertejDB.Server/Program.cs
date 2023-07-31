@@ -24,34 +24,25 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options => {
-	var apiinfo = new OpenApiInfo {
-		Title = "theta-CandidateAPI",
-		Version = "v1",
-		Description = "Candidate API for thetalentbot",
-		Contact = new OpenApiContact {
-			Name = "thetalentbot",
-			Url = new Uri("https://thetalentbot.com/developers/contact")
-		},
-		License = new OpenApiLicense() {
-			Name = "Commercial",
-			Url = new Uri("https://thetalentbot.com/developers/license")
-		}
-	};
+	var apiinfo = new OpenApiInfo();
 
-	var securityScheme = new OpenApiSecurityScheme {
-		//Name = "OpenID",
-		Type = SecuritySchemeType.OpenIdConnect,
-		OpenIdConnectUrl = new Uri(authConfig.GetDiscoveryDocument())
-	};
+	if (!string.IsNullOrWhiteSpace(authConfig.Authority)) {
+		var securityScheme = new OpenApiSecurityScheme {
+			//Name = "OpenID",
+			Type = SecuritySchemeType.OpenIdConnect,
+			OpenIdConnectUrl = new Uri(authConfig.GetDiscoveryDocument())
+		};
+		
+		var securityRequirements = new OpenApiSecurityRequirement {
+			{ securityScheme, new string[] { } }
+		};
 
-	var securityRequirements = new OpenApiSecurityRequirement() {
-		{securityScheme, new string[] {  }},
-	};
+		options.AddSecurityDefinition("OpenID", securityScheme);
+		// Make sure swagger UI requires a Bearer token to be specified
+		options.AddSecurityRequirement(securityRequirements);
+	}
 
 	options.SwaggerDoc("v1", apiinfo);
-	options.AddSecurityDefinition("OpenID", securityScheme);
-	// Make sure swagger UI requires a Bearer token to be specified
-	options.AddSecurityRequirement(securityRequirements);
 	
 	options.OperationFilter<MethodNeedsAuthorizationFilter>();
 });
@@ -94,18 +85,30 @@ builder.Services
 
 builder.Services.AddAuthorization(options => {
 	options.AddPolicy("Upload", policy => {
-		policy.RequireAuthenticatedUser();
-		policy.RequireRole(authConfig.UploadRole);
+		if (string.IsNullOrWhiteSpace(authConfig.Authority)) {
+			policy.RequireAssertion(ahc => true);
+		} else {
+			policy.RequireAuthenticatedUser();
+			policy.RequireRole(authConfig.UploadRole);
+		}
 	});
 
 	options.AddPolicy("Rate", policy => {
-		policy.RequireAuthenticatedUser();
-		policy.RequireRole(authConfig.RateRole);
+		if (string.IsNullOrWhiteSpace(authConfig.Authority)) {
+			policy.RequireAssertion(ahc => true);
+		} else {
+			policy.RequireAuthenticatedUser();
+			policy.RequireRole(authConfig.RateRole);
+		}
 	});
 
 	options.AddPolicy("Admin", policy => {
-		policy.RequireAuthenticatedUser();
-		policy.RequireRole(authConfig.AdminRole);
+		if (string.IsNullOrWhiteSpace(authConfig.Authority)) {
+			policy.RequireAssertion(ahc => true);
+		} else {
+			policy.RequireAuthenticatedUser();
+			policy.RequireRole(authConfig.AdminRole);
+		}
 	});
 });
 
