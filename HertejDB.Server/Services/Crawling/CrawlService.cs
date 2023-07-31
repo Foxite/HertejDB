@@ -90,8 +90,6 @@ public class CrawlService {
 		pendingCrawl.SearchParameter = searchParameter;
 		pendingCrawl.Source = source;
 		pendingCrawl.MaxAtOnce = maxAtOnce;
-		
-		m_DbContext.PendingCrawls.Add(pendingCrawl);
 
 		await m_DbContext.SaveChangesAsync();
 
