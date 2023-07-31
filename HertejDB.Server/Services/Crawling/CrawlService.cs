@@ -78,6 +78,26 @@ public class CrawlService {
 		return pendingCrawl;
 	}
 
+	public async Task<PendingCrawl> UpdatePendingCrawl(long id, string category, int desiredCount, string searchParameter, string source, int maxAtOnce) {
+		var pendingCrawl = await m_DbContext.PendingCrawls.FindAsync(id);
+
+		if (pendingCrawl == null) {
+			throw new FileNotFoundException();
+		}
+		
+		pendingCrawl.Category = category;
+		pendingCrawl.DesiredCount = desiredCount;
+		pendingCrawl.SearchParameter = searchParameter;
+		pendingCrawl.Source = source;
+		pendingCrawl.MaxAtOnce = maxAtOnce;
+		
+		m_DbContext.PendingCrawls.Add(pendingCrawl);
+
+		await m_DbContext.SaveChangesAsync();
+
+		return pendingCrawl;
+	}
+
 	public async Task<bool> RemovePendingCrawl(long id) {
 		return (await m_DbContext.PendingCrawls.Where(pc => pc.Id == id).ExecuteDeleteAsync()) > 0;
 	}

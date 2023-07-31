@@ -66,6 +66,11 @@ public class AdminController : ControllerBase {
 	    return Ok(result);
     }
     
+    [HttpPost("PendingCrawl/{id:long}")]
+    public async Task<IActionResult> UpdatePendingCrawl([FromRoute] long id, [FromBody] AddPendingCrawlDto dto) {
+	    return Ok(await m_CrawlService.UpdatePendingCrawl(id, dto.Category, dto.DesiredCount, dto.SearchParameter, dto.Source, dto.MaxAtOnce));
+    }
+
     [HttpDelete("PendingCrawl/{id:long}")]
     public async Task<IActionResult> RemovePendingCrawl([FromRoute] long id) {
 	    if (await m_CrawlService.RemovePendingCrawl(id)) {
