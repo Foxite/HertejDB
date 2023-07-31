@@ -1,4 +1,3 @@
-using HertejDB.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace HertejDB.Server.Data; 
@@ -7,6 +6,7 @@ public class HertejDbContext : DbContext {
 	public DbSet<Image> Images { get; set; }
 	public DbSet<ImageRating> ImageRatings { get; set; }
 	public DbSet<PendingCrawl> PendingCrawls { get; set; }
+	public DbSet<User> Users { get; set; }
 
 	public HertejDbContext(DbContextOptions<HertejDbContext> dbco) : base(dbco) { }
 

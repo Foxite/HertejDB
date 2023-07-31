@@ -6,6 +6,7 @@ using HertejDB.Server.Data;
 using HertejDB.Server.Jobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HertejDB.Server.Controllers; 
 
@@ -15,9 +16,11 @@ namespace HertejDB.Server.Controllers;
 public class AdminController : ControllerBase {
 	private readonly ISchedulerRegistration m_Scheduler;
 	private readonly CrawlService m_CrawlService;
+	private readonly HertejDbContext m_DbContext;
 
-	public AdminController(ISchedulerRegistration scheduler, CrawlService crawlService) {
+	public AdminController(ISchedulerRegistration scheduler, CrawlService crawlService, HertejDbContext dbContext) {
 		m_CrawlService = crawlService;
+		m_DbContext = dbContext;
 		m_Scheduler = scheduler;
 	}
 
@@ -71,4 +74,30 @@ public class AdminController : ControllerBase {
 		    return NotFound();
 	    }
     }
+
+	[HttpGet("UserWeight/{userId}")]
+	public async Task<IActionResult> GetUserWeight([FromRoute] string userId) {
+		User? user = await m_DbContext.Users.FirstOrDefaultAsync(user => user.UserId == userId);
+		if (user == null) {
+			return NoContent();
+		} else {
+			return Ok(user.Weight);
+		}
+	}
+
+	[HttpPost("UserWeight/{userId}")]
+	public async Task<IActionResult> SetUserWeight([FromRoute] string userId, [FromBody] int weight) {
+		User? user = await m_DbContext.Users.FirstOrDefaultAsync(user => user.UserId == userId);
+		if (user == null) {
+			user = new User() {
+				UserId = userId
+			};
+			m_DbContext.Users.Add(user);
+		}
+
+		user.Weight = weight;
+
+		await m_DbContext.SaveChangesAsync();
+		return Ok();
+	}
 }

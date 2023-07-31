@@ -19,24 +19,26 @@ public class CompleteRatingsJob : IScheduledJob {
 		var options = scope.ServiceProvider.GetRequiredService<IOptions<RatingOptions>>();
 		var dbContext = scope.ServiceProvider.GetRequiredService<HertejDbContext>();
 
-		foreach (var row in from image in dbContext.Images
-			let approval = image.Ratings.Count(rating => rating.IsSuitable)
-			let totalRatings = image.Ratings.Count
-			let opinion = (float) approval / totalRatings
-			where
-				image.RatingStatus == RatingStatus.InProgress &&
-				totalRatings >= options.Value.MinimumToComplete &&
-				(opinion <= options.Value.MaximumToReject || opinion >= options.Value.MinimumToApprove)
-			select new { image.Id, opinion }
+		foreach (var row in
+			from image in dbContext.Images
+			where image.RatingStatus == RatingStatus.InProgress
+			let approval = image.Ratings
+				.Join(
+					dbContext.Users,
+					rating => rating.UserId,
+					user => user.UserId,
+					(rating, user) => new { rating, user }
+				)
+				.Sum(item => (item.rating.IsSuitable ? 1 : -1) * (item.user == null ? 1 : item.user.Weight))
+			where approval <= options.Value.MaximumToReject || approval >= options.Value.MinimumToApprove
+			select new { image, approval }
 	    ) {
-			var image = new Image();
-			image.Id = row.Id;
-			dbContext.Attach(image);
-			
-			if (row.opinion >= options.Value.MinimumToApprove) {
-				image.RatingStatus = RatingStatus.Passed;
+			if (row.approval >= options.Value.MinimumToApprove) {
+				Console.WriteLine("passed");
+				row.image.RatingStatus = RatingStatus.Passed;
 			} else {
-				image.RatingStatus = RatingStatus.Rejected;
+				Console.WriteLine("rejected");
+				row.image.RatingStatus = RatingStatus.Rejected;
 			}
 		}
 
