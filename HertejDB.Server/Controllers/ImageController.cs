@@ -65,7 +65,15 @@ public class ImageController : ControllerBase {
 	[HttpPost]
 	[Authorize("Upload")]
 	public async Task<IActionResult> UploadImage([FromForm] string category, IFormFile file) {
-		Image image = await m_Service.StoreNewImage(category, file.OpenReadStream(), file.ContentType, null);
+		Image image = await m_Service.StoreNewImage(category, file.OpenReadStream(), file.ContentType, null, false);
+
+		return CreatedAtAction(nameof(GetImage), new { id = image.Id }, null);
+	}
+
+	[HttpPost("UploadPreApproved")]
+	[Authorize("Admin")]
+	public async Task<IActionResult> UploadApproved([FromForm] string category, IFormFile file) {
+		Image image = await m_Service.StoreNewImage(category, file.OpenReadStream(), file.ContentType, null, true);
 
 		return CreatedAtAction(nameof(GetImage), new { id = image.Id }, null);
 	}

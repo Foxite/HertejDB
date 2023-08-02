@@ -38,12 +38,12 @@ public class ImageService {
 		return m_DbContext.Images.Include(image => image.SourceAttribution).FirstOrDefaultAsync(image => image.Id == id);
 	}
 	
-	public async Task<Image> StoreNewImage(string category, Stream download, string contentType, ImageSourceAttribution sourceAttribution) {
+	public async Task<Image> StoreNewImage(string category, Stream download, string contentType, ImageSourceAttribution? sourceAttribution, bool preApproved = false) {
 		var image = new Image() {
 			Category = category,
 			MimeType = contentType,
 			Added = DateTime.UtcNow,
-			RatingStatus = RatingStatus.NotRated,
+			RatingStatus = preApproved ? RatingStatus.Passed : RatingStatus.NotRated,
 			SourceAttribution = sourceAttribution
 		};
 
